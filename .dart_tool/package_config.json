@@ -473,10 +473,10 @@
       "name": "ym_speech_to_text",
       "rootUri": "../",
       "packageUri": "lib/",
-      "languageVersion": "3.7"
+      "languageVersion": "3.4"
     }
   ],
-  "generated": "2025-09-16T05:50:00.648054Z",
+  "generated": "2025-09-16T06:09:27.216446Z",
   "generator": "pub",
   "generatorVersion": "3.7.2",
   "flutterRoot": "file:///Users/abcom/Development/flutter",

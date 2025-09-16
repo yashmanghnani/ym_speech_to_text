@@ -3,7 +3,7 @@
 # Run `pod lib lint speech_to_text.podspec` to validate before publishing.
 #
 Pod::Spec.new do |s|
-  s.name             = 'speech_to_text'
+  s.name             = 'ym_speech_to_text'
   s.version          = '7.2.0'
   s.summary          = 'Exposes iOS and macOS speech recognition capabilities to Flutter.'
   s.description      = <<-DESC
