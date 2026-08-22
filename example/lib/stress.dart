@@ -100,7 +100,8 @@ class _MyAppState extends State<MyApp> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
                   DropdownButton(
-                    onChanged: (selectedVal) => _switchLang(selectedVal),
+                    onChanged: (String? selectedVal) =>
+                        _switchLang(selectedVal),
                     value: _currentLocaleId,
                     items: _localeNames
                         .map(
@@ -150,7 +151,7 @@ class _MyAppState extends State<MyApp> {
                                 BoxShadow(
                                     blurRadius: .26,
                                     spreadRadius: level * 1.5,
-                                    color: Colors.black.withOpacity(.05))
+                                    color: Colors.black.withValues(alpha: .05))
                               ],
                               color: Colors.white,
                               borderRadius:
@@ -283,7 +284,8 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  void _switchLang(selectedVal) {
+  void _switchLang(String? selectedVal) {
+    if (selectedVal == null) return;
     setState(() {
       _currentLocaleId = selectedVal;
     });

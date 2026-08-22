@@ -17,8 +17,8 @@ A Flutter plugin module for iOS and macOS that uses native speech recognition.
   s.source_files     = 'speech_to_text/Sources/speech_to_text/**/*.swift'
   s.ios.dependency 'Flutter'
   s.osx.dependency 'FlutterMacOS'
-  s.ios.deployment_target = '13.0'
-  s.osx.deployment_target = '11.00'
+  s.ios.deployment_target = '12.0'
+  s.osx.deployment_target = '10.14'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
   s.swift_version = '5.0'
   s.ios.dependency 'CwlCatchException'

@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  ym_speech_to_text
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

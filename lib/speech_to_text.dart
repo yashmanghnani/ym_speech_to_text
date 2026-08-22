@@ -313,8 +313,8 @@ class SpeechToText {
     if (_initWorked) {
       return Future.value(_initWorked);
     }
-    _finalTimeout = finalTimeout;
-    if (finalTimeout <= _minFinalTimeout) {}
+    _finalTimeout =
+        finalTimeout <= _minFinalTimeout ? Duration.zero : finalTimeout;
     errorListener = onError;
     statusListener = onStatus;
     SpeechToTextPlatform.instance.onTextRecognition = _onTextRecognition;
@@ -441,7 +441,7 @@ class SpeechToText {
   ///
   /// [listenOptions] used to specify the options to use for the listen
   /// session. See [SpeechListenOptions] for details.
-  Future listen(
+  Future<void> listen(
       {SpeechResultListener? onResult,
       Duration? listenFor,
       Duration? pauseFor,
@@ -469,7 +469,7 @@ class SpeechToText {
     _notifiedDone = false;
     _resultListener = onResult;
     _soundLevelChange = onSoundLevelChange;
-    _partialResults = partialResults;
+    _partialResults = listenOptions?.partialResults ?? partialResults;
     _notifyFinalTimer?.cancel();
     _notifyFinalTimer = null;
     final usedOptions = listenOptions ??
@@ -481,7 +481,7 @@ class SpeechToText {
           cancelOnError: cancelOnError,
         );
     try {
-      var started = await SpeechToTextPlatform.instance
+      final started = await SpeechToTextPlatform.instance
           .listen(localeId: localeId, options: usedOptions);
       if (started) {
         _listenStartedAt = clock.now().millisecondsSinceEpoch;

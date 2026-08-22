@@ -1,0 +1,10 @@
+# Keep local/generated workspace state out of the published plugin archive.
+.dart_tool/
+**/.dart_tool/
+build/
+coverage/
+**/local.properties
+**/ephemeral/
+**/Pods/
+**/Podfile.lock
+**/Package.resolved

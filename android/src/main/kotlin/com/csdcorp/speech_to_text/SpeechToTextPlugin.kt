@@ -135,6 +135,13 @@ public class SpeechToTextPlugin :
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+        handler.removeCallbacksAndMessages(null)
+        speechRecognizer?.cancel()
+        speechRecognizer?.destroy()
+        speechRecognizer = null
+        optionallyStopBluetooth()
+        listening = false
+        initializedSuccessfully = false
         this.pluginContext = null;
         channel?.setMethodCallHandler(null)
         channel = null
@@ -202,6 +209,11 @@ public class SpeechToTextPlugin :
                                 "listenMode is required", null)
                         return
                     }
+                    if (listenModeIndex !in enumValues<ListenMode>().indices) {
+                        result.error(SpeechToTextErrors.missingOrInvalidArg.name,
+                                "listenMode must be between 0 and ${enumValues<ListenMode>().lastIndex}", null)
+                        return
+                    }
                     startListening(result, localeId, partialResults, listenModeIndex, onDevice )
                 }
                 "stop" -> stopListening(result)
@@ -227,6 +239,8 @@ public class SpeechToTextPlugin :
             val hasPerm = ContextCompat.checkSelfPermission(localContext,
                     Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
             result.success(hasPerm)
+        } else {
+            result.success(false)
         }
     }
 
@@ -355,13 +369,18 @@ public class SpeechToTextPlugin :
             result.success(false)
             return
         }
-        var hasPermission = ContextCompat.checkSelfPermission(pluginContext!!,
+        val context = pluginContext
+        if (context == null) {
+            result.success(false)
+            return
+        }
+        val hasPermission = ContextCompat.checkSelfPermission(context,
             Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
-        if (Build.VERSION.SDK_INT >= 33 && hasPermission) {
-            if ( SpeechRecognizer.isOnDeviceRecognitionAvailable(pluginContext!!)) {
+        if (Build.VERSION.SDK_INT >= 33 && hasPermission &&
+            SpeechRecognizer.isOnDeviceRecognitionAvailable(context)) {
                 // after much experimentation this was the only working iteration of the
                 // checkRecognitionSupport that works.
-            var recognizer = createOnDeviceSpeechRecognizer(pluginContext!!)
+            val recognizer = createOnDeviceSpeechRecognizer(context)
             var recognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
 //            var recognizer = createSpeechRecognizer(pluginContext!!)
 //            var recognizerIntent = Intent(RecognizerIntent.ACTION_GET_LANGUAGE_DETAILS)
@@ -375,16 +394,16 @@ public class SpeechToTextPlugin :
                     override fun onError(error: Int) {
                         debugLog("error from checkRecognitionSupport: " + error)
                         recognizer?.destroy()
+                        result.success(ArrayList<String>())
                     }
                 })
-            }
         } else {
-            var detailsIntent = RecognizerIntent.getVoiceDetailsIntent(pluginContext)
+            var detailsIntent = RecognizerIntent.getVoiceDetailsIntent(context)
             if (null == detailsIntent) {
                 detailsIntent = Intent(RecognizerIntent.ACTION_GET_LANGUAGE_DETAILS)
                 detailsIntent.setPackage("com.google.android.googlequicksearchbox")
             }
-            pluginContext?.sendOrderedBroadcast(
+            context.sendOrderedBroadcast(
                     detailsIntent, null, LanguageDetailsChecker(result, debugLogging),
                     null, Activity.RESULT_OK, null, null)
         }
@@ -491,8 +510,13 @@ public class SpeechToTextPlugin :
         }
         permissionToRecordAudio = ContextCompat.checkSelfPermission(localContext,
                 Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
-        val permissionToEnableBluetooth = ContextCompat.checkSelfPermission(localContext,
+        val permissionToEnableBluetooth = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ContextCompat.checkSelfPermission(localContext,
                 Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+        } else {
+            ContextCompat.checkSelfPermission(localContext,
+                Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED
+        }
         bluetoothDisabled = !permissionToEnableBluetooth || noBluetoothOpt
         debugLog("Checked permission")
         if (!permissionToRecordAudio) {
@@ -500,7 +524,7 @@ public class SpeechToTextPlugin :
             if (null != localActivity) {
                 debugLog("Requesting permission")
                 var requiredPermissions = arrayOf(Manifest.permission.RECORD_AUDIO)
-                if ( !noBluetoothOpt ) {
+                if ( !noBluetoothOpt && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ) {
                     requiredPermissions = requiredPermissions.plus(Manifest.permission.BLUETOOTH_CONNECT)
                 }
                 ActivityCompat.requestPermissions(localActivity, requiredPermissions, speechToTextPermissionCode)
@@ -725,9 +749,13 @@ public class SpeechToTextPlugin :
             speechToTextPermissionCode -> {
                 permissionToRecordAudio = grantResults.isNotEmpty() &&
                         grantResults[0] == PackageManager.PERMISSION_GRANTED
-                bluetoothDisabled = (grantResults.isEmpty() || grantResults.size == 1 ||
-                        grantResults[1] != PackageManager.PERMISSION_GRANTED) ||
-                        noBluetoothOpt
+                val bluetoothPermissionGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    grantResults.size > 1 && grantResults[1] == PackageManager.PERMISSION_GRANTED
+                } else {
+                    ContextCompat.checkSelfPermission(pluginContext!!,
+                        Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED
+                }
+                bluetoothDisabled = !bluetoothPermissionGranted || noBluetoothOpt
                 completeInitialize()
                 return true
             }

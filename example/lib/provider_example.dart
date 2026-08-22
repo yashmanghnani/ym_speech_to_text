@@ -112,7 +112,7 @@ class SpeechProviderExampleWidgetState
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: <Widget>[
               DropdownButton(
-                onChanged: (selectedVal) => _switchLang(selectedVal),
+                onChanged: (String? selectedVal) => _switchLang(selectedVal),
                 value: _currentLocaleId,
                 items: speechProvider.locales
                     .map(
@@ -167,7 +167,8 @@ class SpeechProviderExampleWidgetState
     ]);
   }
 
-  void _switchLang(selectedVal) {
+  void _switchLang(String? selectedVal) {
+    if (selectedVal == null) return;
     setState(() {
       _currentLocaleId = selectedVal;
     });

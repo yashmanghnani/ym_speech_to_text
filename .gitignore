@@ -1,0 +1,21 @@
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+coverage/
+**/.gradle/
+
+# Generated platform files and local SDK paths.
+**/local.properties
+**/ephemeral/
+**/Pods/
+**/Podfile.lock
+**/Package.resolved
+
+# IDE and OS files.
+.idea/
+.vscode/
+*.iml
+*.log
+.DS_Store

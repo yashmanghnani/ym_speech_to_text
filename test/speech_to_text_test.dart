@@ -75,6 +75,18 @@ void main() {
       expect(testPlatform.listenLocale, isNull);
       expect(testPlatform.listenInvoked, true);
     });
+    test('honors partialResults from listenOptions', () async {
+      await speech.initialize();
+      var resultReceived = false;
+      await speech.listen(
+        onResult: (_) => resultReceived = true,
+        listenOptions: SpeechListenOptions(partialResults: false),
+      );
+
+      testPlatform.notifyPartialWords();
+
+      expect(resultReceived, isFalse);
+    });
     test('converts platformException to listenFailed', () async {
       await speech.initialize();
       testPlatform.listenException = true;

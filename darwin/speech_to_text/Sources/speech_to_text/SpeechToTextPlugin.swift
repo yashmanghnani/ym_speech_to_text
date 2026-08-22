@@ -2,7 +2,7 @@ import Speech
 import CwlCatchException
 import os.log
 
-#if os(OSX)
+#if os(macOS)
   import FlutterMacOS
   import Cocoa
   import AVFoundation
@@ -101,13 +101,13 @@ public class SpeechToTextPlugin: NSObject, FlutterPlugin {
   private let jsonEncoder = JSONEncoder()
   private let busForNodeTap = 0
   private let speechBufferSize: AVAudioFrameCount = 1024
-  private static var subsystem = Bundle.main.bundleIdentifier!
+  private static var subsystem = Bundle.main.bundleIdentifier ?? "com.csdcorp.speechToText"
   private let pluginLog = OSLog(subsystem: "com.csdcorp.speechToText", category: "plugin")
 
   public static func register(with registrar: FlutterPluginRegistrar) {
 
     var channel: FlutterMethodChannel
-    #if os(OSX)
+    #if os(macOS)
       channel = FlutterMethodChannel(
         name: "plugin.csdcorp.com/speech_to_text", binaryMessenger: registrar.messenger)
     #else

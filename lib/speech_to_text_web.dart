@@ -1,9 +1,7 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 import 'package:web/web.dart' as web;
-import 'dart:math';
 
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:ym_speech_to_text/balanced_alternates.dart';
@@ -82,8 +80,6 @@ class SpeechToTextPlugin extends SpeechToTextPlatform {
 
         _webSpeech?.onstart = _onSpeechStart.toJS;
 
-        _webSpeech?.onspeechstart = _onSpeechStart.toJS;
-
         _webSpeech?.onend = _onSpeechEnd.toJS;
 
         _webSpeech?.onnomatch = _onNoMatch.toJS;
@@ -158,10 +154,11 @@ class SpeechToTextPlugin extends SpeechToTextPlatform {
   @override
   Future<bool> listen(
       {String? localeId,
-      @deprecated partialResults = true,
-      @deprecated onDevice = false,
-      @deprecated int listenMode = 0,
-      @deprecated sampleRate = 0,
+      @Deprecated('Use SpeechListenOptions.partialResults instead')
+      partialResults = true,
+      @Deprecated('Use SpeechListenOptions.onDevice instead') onDevice = false,
+      @Deprecated('Use SpeechListenOptions.listenMode instead') listenMode = 0,
+      @Deprecated('Use SpeechListenOptions.sampleRate instead') sampleRate = 0,
       SpeechListenOptions? options}) async {
     if (null == _webSpeech) return false;
     _webSpeech!.onresult = _onResult.toJS;
@@ -172,8 +169,17 @@ class SpeechToTextPlugin extends SpeechToTextPlatform {
     }
     _doneSent = false;
     _resultSent = false;
-    _webSpeech!.start();
-    return true;
+    try {
+      _webSpeech!.start();
+      return true;
+    } on Object catch (error) {
+      final speechError = SpeechRecognitionError(
+        'start_failed: $error',
+        true,
+      );
+      onError?.call(jsonEncode(speechError.toJson()));
+      return false;
+    }
   }
 
   /// returns the list of speech locales available on the device.
@@ -182,7 +188,10 @@ class SpeechToTextPlugin extends SpeechToTextPlatform {
   Future<List<dynamic>> locales() async {
     var availableLocales = [];
     var lang = _webSpeech?.lang;
-    if (null != lang && lang.isNotEmpty) {
+    if (lang == null || lang.isEmpty) {
+      lang = web.window.navigator.language;
+    }
+    if (lang.isNotEmpty) {
       lang = lang.replaceAll(':', '_');
       availableLocales.add('$lang:$lang');
     }
@@ -216,23 +225,18 @@ class SpeechToTextPlugin extends SpeechToTextPlatform {
 
   void _onResult(web.SpeechRecognitionEvent event) {
     var isFinal = false;
-    var recogResults = <SpeechRecognitionWords>[];
     var results = event.results;
 
     final balanced = BalancedAlternates();
     var resultIndex = 0;
-    var longestAlt = 0;
     for (var i = 0; i < results.length; i++) {
       final recognitionResult = results.item(i);
+      isFinal = isFinal || recognitionResult.isFinal;
 
       for (var altIndex = 0;
           altIndex < (recognitionResult.length);
           ++altIndex) {
-        longestAlt = max(longestAlt, altIndex);
-        final web.SpeechRecognitionAlternative? alt =
-            recognitionResult.item(altIndex);
-
-        if (null == alt) continue;
+        final alt = recognitionResult.item(altIndex);
 
         final transcript = alt.transcript;
         final confidence = alt.confidence;
@@ -241,8 +245,8 @@ class SpeechToTextPlugin extends SpeechToTextPlatform {
       }
       ++resultIndex;
     }
-    recogResults = balanced.getAlternates(_aggregateResults);
-    var result = SpeechRecognitionResult(recogResults, isFinal);
+    final recogResults = balanced.getAlternates(_aggregateResults);
+    final result = SpeechRecognitionResult(recogResults, isFinal);
     onTextRecognition?.call(jsonEncode(result.toJson()));
     _resultSent = true;
   }

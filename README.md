@@ -5,15 +5,15 @@
 A library that exposes device specific speech recognition capability.
 
 This plugin contains a set of classes that make it easy to use the speech recognition
-capabilities of the underlying platform in Flutter. It supports Android, iOS, MacOS and web. The
-target use cases for this library are commands and short phrases, not continuous spoken
+capabilities of the underlying platform in Flutter. It supports Android, iOS, macOS, web, Windows,
+and Linux builds. The target use cases for this library are commands and short phrases, not continuous spoken
 conversion or always on listening.
 
 ## Platform Support
 
-| Support | Android | iOS | MacOS | Web\* | Linux | Windows |
+| Support | Android | iOS | macOS | Web\* | Linux | Windows |
 | :-----: | :-----: | :-: | :---: | :---: | :---: | :-----: |
-|  build  |   ✅    | ✅  |  ✅   |  ✅   |   ✘   |    ✅    |
+|  build  |   ✅    | ✅  |  ✅   |  ✅   |   ✅   |    ✅    |
 | speech  |   ✅    | ✅  |  ✅   |  ✅   |   ✘   |    ✅    |
 
 _build: means you can build and run with the plugin on that platform_
@@ -30,6 +30,11 @@ for the PR! Note that Windows support is currently in beta, if anyone can try
 it out please provide feedback, there are known issues and this is not yet 
 ready for production use. 
 * iOS and Mac speech recognition does more work in the background avoiding UI pauses
+
+Current platform status:
+* Android, iOS, macOS, web, and Windows provide speech recognition implementations.
+* Linux is build-compatible and returns a clear unsupported result from `initialize`; a native
+  Linux speech backend is not bundled.
 
 7.0.0 
 * Now supports speech recognition on MacOS with many thanks to @alexrabin-sentracam for the PR!
